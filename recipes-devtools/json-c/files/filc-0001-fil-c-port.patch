@@ -1,0 +1,21 @@
+Subject: [PATCH] Fil-C port for json-c
+
+Pass the version script as -Wc,--version-script=... so filcc 0.687 sees
+the option itself and pizlonates the exported symbols; with
+-Wl,--version-script the pizlonated_* symbols are hidden from dependents
+(undefined reference to pizlonated_json_object_*).
+
+Upstream-Status: Pending
+---
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -374,7 +374,7 @@
+ 	)
+ 	list(REMOVE_ITEM CMAKE_REQUIRED_LIBRARIES "-Wl,--version-script,${CMAKE_CURRENT_BINARY_DIR}/check-version-script.sym")
+ 	if (VERSION_SCRIPT_WORKS)
+-		set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--version-script,${CMAKE_CURRENT_SOURCE_DIR}/json-c.sym")
++		set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wc,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/json-c.sym")
+ 	endif()
+ endif()
+ 
+

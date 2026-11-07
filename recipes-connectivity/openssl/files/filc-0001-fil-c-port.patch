@@ -1,0 +1,40 @@
+Subject: [PATCH] Fil-C port for openssl
+
+Use -Wc,--version-script (filcc 0.687 driver) instead of -Wl,--version-script,
+and skip -Wa,--noexecstack under Fil-C.
+
+Upstream-Status: Pending
+---
+diff -ruN '--exclude=.git' openssl-3.5.7/Configurations/shared-info.pl mod/Configurations/shared-info.pl
+--- openssl-3.5.7/Configurations/shared-info.pl	2026-06-09 14:54:25.000000000 +0300
++++ mod/Configurations/shared-info.pl	2026-10-30 20:16:42.580841748 +0200
+@@ -31,7 +31,7 @@
+     'linux-shared' => sub {
+         return {
+             %{$shared_info{'gnu-shared'}},
+-            shared_defflag    => '-Wl,--version-script=',
++            shared_defflag    => '-Wc,--version-script=',
+             dso_ldflags       =>
+                 (grep /(?:^|\s)-fsanitize/,
+                  @{$config{CFLAGS}}, @{$config{cflags}})
+@@ -43,7 +43,7 @@
+     'bsd-gcc-nodef-shared' => sub { 
+         return {
+             %{$shared_info{'gnu-shared'}},
+-            shared_defflags     => '-Wl,--version-script=',
++            shared_defflags     => '-Wc,--version-script=',
+         };
+     },
+     'darwin-shared' => {
+diff -ruN '--exclude=.git' openssl-3.5.7/Configure mod/Configure
+--- openssl-3.5.7/Configure	2026-06-09 14:54:25.000000000 +0300
++++ mod/Configure	2026-10-30 20:16:42.590425845 +0200
+@@ -1723,7 +1723,7 @@
+ 
+ if (!$disabled{asm} && !$predefined_C{__MACH__} && $^O ne 'VMS' && !$predefined_C{_AIX}) {
+     # probe for -Wa,--noexecstack option...
+-    if ($predefined_C{__clang__}) {
++    if ($predefined_C{__clang__} && !$predefined_C{__PIZLONATOR_WAS_HERE__}) {
+         # clang has builtin assembler, which doesn't recognize --help,
+         # but it apparently recognizes the option in question on all
+         # supported platforms even when it's meaningless. In other words

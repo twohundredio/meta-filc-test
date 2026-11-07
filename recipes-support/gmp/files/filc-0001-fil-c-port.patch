@@ -1,0 +1,30 @@
+Subject: [PATCH] Fil-C port for gmp
+
+Ported from the upstream Fil-C project tree
+(github.com/pizlonator/fil-c, projects/gmp).
+
+Upstream-Status: Pending
+---
+diff -ruN '--exclude=.git' gmp-6.3.0/configure filc-proj/projects/gmp-6.3.0/configure
+--- gmp-6.3.0/configure	2023-07-29 16:42:22.000000000 +0300
++++ filc-proj/projects/gmp-6.3.0/configure	2026-10-29 21:10:28.084542484 +0200
+@@ -5704,15 +5704,15 @@
+ 	gcc_64_cflags="$gcc_cflags -m64"
+ 	gcc_64_cflags_optlist="cpu arch noavx"
+ 	CALLING_CONVENTIONS_OBJS_64='amd64call.lo amd64check$U.lo'
+-	SPEED_CYCLECOUNTER_OBJ_64=x86_64.lo
+-	cyclecounter_size_64=2
++	#SPEED_CYCLECOUNTER_OBJ_64=x86_64.lo
++	#cyclecounter_size_64=2
+ 
+ 	cclist_x32="gcc cc"
+ 	gcc_x32_cflags="$gcc_cflags -mx32"
+ 	gcc_x32_cflags_optlist="$gcc_64_cflags_optlist"
+ 	CALLING_CONVENTIONS_OBJS_x32="$CALLING_CONVENTIONS_OBJS_64"
+-	SPEED_CYCLECOUNTER_OBJ_x32="$SPEED_CYCLECOUNTER_OBJ_64"
+-	cyclecounter_size_x32="$cyclecounter_size_64"
++	#SPEED_CYCLECOUNTER_OBJ_x32="$SPEED_CYCLECOUNTER_OBJ_64"
++	#cyclecounter_size_x32="$cyclecounter_size_64"
+ 	path_x32="$path_64"
+ 	limb_x32=longlong
+ 	any_x32_testlist="sizeof-long-4"

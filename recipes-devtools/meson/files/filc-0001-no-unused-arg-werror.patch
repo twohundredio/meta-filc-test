@@ -1,0 +1,22 @@
+Subject: [PATCH] meson: don't add -Werror=unused-command-line-argument to clang check compiles
+
+The fil-c toolchain puts link-only flags (-L, -Wl,-rpath-link, --ld-path) in
+CC. meson's clang mixin appends -Werror=unused-command-line-argument to every
+compile-only check, so those flags make all configure checks fail (e.g.
+lighttpd's socklen_t/timegm probes report NO although musl has them).
+Drop that flag; -Wno-unused-command-line-argument in CC then suppresses the
+warning and the checks work.
+
+Upstream-Status: Inappropriate (fil-c toolchain specific)
+---
+--- a/mesonbuild/compilers/mixins/clang.py
++++ b/mesonbuild/compilers/mixins/clang.py
+@@ -144,7 +144,7 @@
+         # https://github.com/llvm/llvm-project/issues/33905
+         myargs: T.List[str] = ['-Werror=implicit-function-declaration']
+         if mode is CompileCheckMode.COMPILE:
+-            myargs.extend(['-Werror=unknown-warning-option', '-Werror=unused-command-line-argument'])
++            myargs.extend(['-Werror=unknown-warning-option'])
+             if mesonlib.version_compare(self.version, '>=3.6.0'):
+                 myargs.append('-Werror=ignored-optimization-argument')
+         return super().get_compiler_check_args(mode) + myargs

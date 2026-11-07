@@ -1,0 +1,19 @@
+Subject: [PATCH] Fil-C port for kmod
+
+Use -Wc,--version-script= (filcc 0.687 driver) so pizlonated symbols are
+exported from libkmod.
+
+Upstream-Status: Pending
+---
+diff -ruN '--exclude=.git' kmod-34.2/meson.build mod/meson.build
+--- kmod-34.2/meson.build	2025-03-28 06:01:47.000000000 +0200
++++ mod/meson.build	2026-10-30 22:24:02.575526088 +0200
+@@ -426,7 +426,7 @@
+   libkmod_files,
+   dependencies : libkmod_deps + cdeps,
+   link_with : libshared,
+-  link_args : ['-Wl,--version-script', meson.current_source_dir() /
++  link_args : ['-Wc,--version-script=' + meson.current_source_dir() /
+                                                   'libkmod/libkmod.sym'],
+   link_depends : files('libkmod/libkmod.sym'),
+   gnu_symbol_visibility : 'hidden',

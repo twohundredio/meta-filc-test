@@ -1,0 +1,37 @@
+Subject: [PATCH] Fil-C port for libgpg-error
+
+Ported from the upstream Fil-C project tree
+(github.com/pizlonator/fil-c, projects/libgpg-error-1.50).
+
+Pass the version script as -Wc,--version-script=... (both Makefile.am and
+Makefile.in: autotools maintainer mode can regenerate the latter) so filcc
+0.687 sees the option itself and pizlonates the exported symbols; with
+-Wl,--version-script the pizlonated_* symbols are hidden and dependents
+fail with undefined references.
+
+Upstream-Status: Pending
+---
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -184,7 +184,7 @@
+ socklibs = @GPG_ERROR_CONFIG_LIBS_PRIVATE@
+ 
+ if HAVE_LD_VERSION_SCRIPT
+-  libgpg_error_vers_opt = -Wl,--version-script=$(srcdir)/gpg-error.vers
++  libgpg_error_vers_opt = -Wc,--version-script=$(srcdir)/gpg-error.vers
+ else
+   libgpg_error_vers_opt =
+ endif
+
+--- a/src/Makefile.in
++++ b/src/Makefile.in
+@@ -657,7 +657,7 @@
+ #
+ socklibs = @GPG_ERROR_CONFIG_LIBS_PRIVATE@
+ @HAVE_LD_VERSION_SCRIPT_FALSE@libgpg_error_vers_opt = 
+-@HAVE_LD_VERSION_SCRIPT_TRUE@libgpg_error_vers_opt = -Wl,--version-script=$(srcdir)/gpg-error.vers
++@HAVE_LD_VERSION_SCRIPT_TRUE@libgpg_error_vers_opt = -Wc,--version-script=$(srcdir)/gpg-error.vers
+ libgpg_error_la_LDFLAGS = \
+   -no-undefined $(export_symbols) $(libgpg_error_vers_opt) \
+   $(extra_ltoptions) -version-info \
+

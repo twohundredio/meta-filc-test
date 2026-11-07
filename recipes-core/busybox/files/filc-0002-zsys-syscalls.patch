@@ -1,0 +1,144 @@
+Subject: [PATCH] Fil-C: route stubbed syscalls to the zsys_* runtime wrappers
+
+In fil-c 0.687 the usermusl libc wrappers for sethostname, setdomainname,
+klogctl (syslog), clock_settime and settimeofday still use the raw
+__syscallN macros, which are compiled to hard "bad syscall" zerrorf stubs
+(projects/usermusl/src/internal/syscall.h) -> "filc panic: user thwarted
+themselves" at boot (hostname.sh, dmesg.sh, hwclock.sh). The corresponding
+zsys_* implementations DO exist in libpizlo (filc_native_zsys_*), they just
+are not wired into those musl wrappers yet. Call them directly from busybox.
+Regenerated against the OE-patched busybox 1.37.0 tree (yocto-6.0.4).
+
+Upstream-Status: Pending
+---
+diff -ruN '--exclude=.git' a/coreutils/date.c b/coreutils/date.c
+--- a/coreutils/date.c	2024-04-16 10:23:50.000000000 +0300
++++ b/coreutils/date.c	2026-11-07 10:34:54.345904301 +0200
+@@ -125,6 +125,7 @@
+ //usage:       "Wed Apr 12 18:52:41 MDT 2000\n"
+ 
+ #include "libbb.h"
++#include <pizlonated_syscalls.h> /* fil-c: zsys_* syscall wrappers (see filc-0002 patch) */
+ #include "common_bufsiz.h"
+ #if ENABLE_FEATURE_DATE_NANO
+ # include <sys/syscall.h>
+@@ -288,7 +289,7 @@
+ 		ts.tv_nsec = 0;
+ 
+ 		/* if setting time, set it */
+-		if ((opt & OPT_SET) && clock_settime(CLOCK_REALTIME, &ts) < 0) {
++		if ((opt & OPT_SET) && zsys_clock_settime(CLOCK_REALTIME, &ts) < 0) {
+ 			bb_simple_perror_msg("can't set date");
+ 		}
+ 	}
+diff -ruN '--exclude=.git' a/libbb/xfuncs_printf.c b/libbb/xfuncs_printf.c
+--- a/libbb/xfuncs_printf.c	2023-01-05 17:29:10.000000000 +0200
++++ b/libbb/xfuncs_printf.c	2026-11-07 10:34:54.345987798 +0200
+@@ -19,6 +19,7 @@
+  * xfunc_printf.c contains those which do.
+  */
+ #include "libbb.h"
++#include <pizlonated_syscalls.h> /* fil-c: zsys_* syscall wrappers (see filc-0002 patch) */
+ 
+ 
+ /* All the functions starting with "x" call bb_error_msg_and_die() if they
+@@ -726,7 +727,13 @@
+ 
+ void FAST_FUNC xsettimeofday(const struct timeval *tv)
+ {
++#if defined(__FILC__)
++	/* fil-c: libc settimeofday routes to the clock_settime "bad syscall"
++	 * stub in 0.687; call the bounds-checked zsys implementation instead */
++	if (zsys_settimeofday(tv, NULL))
++#else
+ 	if (settimeofday(tv, NULL))
++#endif
+ 		bb_simple_perror_msg_and_die("settimeofday");
+ }
+ 
+diff -ruN '--exclude=.git' a/networking/hostname.c b/networking/hostname.c
+--- a/networking/hostname.c	2024-04-16 10:23:50.000000000 +0300
++++ b/networking/hostname.c	2026-11-07 10:34:54.346030388 +0200
+@@ -46,6 +46,7 @@
+ //usage:#define dnsdomainname_full_usage ""
+ 
+ #include "libbb.h"
++#include <pizlonated_syscalls.h> /* fil-c: zsys_* syscall wrappers (see filc-0002 patch) */
+ 
+ static void do_sethostname(char *s, int isfile)
+ {
+@@ -58,7 +59,7 @@
+ 		}
+ 		if (ENABLE_FEATURE_CLEAN_UP)
+ 			config_close(parser);
+-	} else if (sethostname(s, strlen(s))) {
++	} else if (zsys_sethostname(s, strlen(s))) {
+ //		if (errno == EPERM)
+ //			bb_error_msg_and_die(bb_msg_perm_denied_are_you_root);
+ 		bb_simple_perror_msg_and_die("sethostname");
+diff -ruN '--exclude=.git' a/util-linux/dmesg.c b/util-linux/dmesg.c
+--- a/util-linux/dmesg.c	2024-04-16 10:23:50.000000000 +0300
++++ b/util-linux/dmesg.c	2026-11-07 10:34:54.346068279 +0200
+@@ -56,6 +56,7 @@
+ 
+ #include <sys/klog.h>
+ #include "libbb.h"
++#include <pizlonated_syscalls.h> /* fil-c: zsys_* syscall wrappers (see filc-0002 patch) */
+ 
+ int dmesg_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
+ int dmesg_main(int argc UNUSED_PARAM, char **argv)
+@@ -72,20 +73,20 @@
+ 
+ 	opts = getopt32(argv, "cs:+n:+r", &len, &level);
+ 	if (opts & OPT_n) {
+-		if (klogctl(8, NULL, (long) level))
++		if (zsys_syslog(8, NULL, (long) level))
+ 			bb_simple_perror_msg_and_die("klogctl");
+ 		return EXIT_SUCCESS;
+ 	}
+ 
+ 	if (!(opts & OPT_s))
+-		len = klogctl(10, NULL, 0); /* read ring buffer size */
++		len = zsys_syslog(10, NULL, 0); /* read ring buffer size */
+ 	if (len < 16*1024)
+ 		len = 16*1024;
+ 	if (len > 16*1024*1024)
+ 		len = 16*1024*1024;
+ 
+ 	buf = xmalloc(len);
+-	len = klogctl(3 + (opts & OPT_c), buf, len); /* read ring buffer */
++	len = zsys_syslog(3 + (opts & OPT_c), buf, len); /* read ring buffer */
+ 	if (len < 0)
+ 		bb_simple_perror_msg_and_die("klogctl");
+ 	if (len == 0)
+diff -ruN '--exclude=.git' a/util-linux/hwclock.c b/util-linux/hwclock.c
+--- a/util-linux/hwclock.c	2026-11-07 10:34:36.688103329 +0200
++++ b/util-linux/hwclock.c	2026-11-07 10:34:54.346119485 +0200
+@@ -33,6 +33,7 @@
+ //kbuild:lib-$(CONFIG_HWCLOCK) += hwclock.o
+ 
+ #include "libbb.h"
++#include <pizlonated_syscalls.h> /* fil-c: zsys_* syscall wrappers (see filc-0002 patch) */
+ /* After libbb.h, since it needs sys/types.h on some systems */
+ #include <sys/utsname.h>
+ #include "rtc_.h"
+@@ -133,6 +134,11 @@
+ static void set_kernel_tz(const struct timezone *tz)
+ {
+ 	int ret = 1;
++#if defined(__FILC__)
++	/* fil-c: the musl settimeofday/raw syscall path is a "bad syscall" stub;
++	 * use the bounds-checked zsys implementation from libpizlo instead */
++	ret = zsys_settimeofday(NULL, tz);
++#else
+ #if LIBC_IS_MUSL
+ 	/* musl libc does not pass tz argument to syscall
+ 	 * because "it's deprecated by POSIX, therefore it's fine
+@@ -147,6 +153,7 @@
+ #else
+ 	ret = settimeofday(NULL, tz);
+ #endif
++#endif
+ 	if (ret)
+ 		bb_simple_perror_msg_and_die("settimeofday");
+ }

@@ -1,0 +1,152 @@
+Subject: [PATCH] Fil-C port for bzip2
+
+Ported from the upstream Fil-C project tree
+(github.com/pizlonator/fil-c, projects/).
+
+Upstream-Status: Pending
+---
+diff -ruN '--exclude=.git' '--exclude=*.1' '--exclude=*.ps' '--exclude=*.html' '--exclude=*.xml' '--exclude=*.txt' '--exclude=*.preformatted' '--exclude=.gitattributes' '--exclude=.gitignore' '--exclude=*.sh' bzip2-1.0.8/bzip2.c filc-proj/projects/bzip2/bzip2.c
+--- bzip2-1.0.8/bzip2.c	2026-10-30 19:45:34.397362913 +0200
++++ filc-proj/projects/bzip2/bzip2.c	2026-10-30 19:45:34.394889745 +0200
+@@ -150,6 +150,8 @@
+          ERROR_IF_MINUS_ONE ( retVal );               \
+       } while ( 0 )
+ 
++#   define STDERR_FILENO _fileno(stderr)
++
+ #endif /* BZ_LCCWIN32 */
+ 
+ 
+@@ -815,10 +817,9 @@
+ static 
+ void mySIGSEGVorSIGBUScatcher ( IntNative n )
+ {
++   const char *msg;
+    if (opMode == OM_Z)
+-      fprintf ( 
+-      stderr,
+-      "\n%s: Caught a SIGSEGV or SIGBUS whilst compressing.\n"
++      msg = ": Caught a SIGSEGV or SIGBUS whilst compressing.\n"
+       "\n"
+       "   Possible causes are (most likely first):\n"
+       "   (1) This computer has unreliable memory or cache hardware\n"
+@@ -834,12 +835,9 @@
+       "   bug report should have.  If the manual is available on your\n"
+       "   system, please try and read it before mailing me.  If you don't\n"
+       "   have the manual or can't be bothered to read it, mail me anyway.\n"
+-      "\n",
+-      progName );
+-      else
+-      fprintf ( 
+-      stderr,
+-      "\n%s: Caught a SIGSEGV or SIGBUS whilst decompressing.\n"
++      "\n";
++   else
++      msg = ": Caught a SIGSEGV or SIGBUS whilst decompressing.\n"
+       "\n"
+       "   Possible causes are (most likely first):\n"
+       "   (1) The compressed data is corrupted, and bzip2's usual checks\n"
+@@ -857,13 +855,25 @@
+       "   bug report should have.  If the manual is available on your\n"
+       "   system, please try and read it before mailing me.  If you don't\n"
+       "   have the manual or can't be bothered to read it, mail me anyway.\n"
+-      "\n",
+-      progName );
++      "\n";
++   write ( STDERR_FILENO, "\n", 1 );
++   write ( STDERR_FILENO, progName, strlen ( progName ) );
++   write ( STDERR_FILENO, msg, strlen ( msg ) );
++
++   msg = "\tInput file = ";
++   write ( STDERR_FILENO, msg, strlen (msg) );
++   write ( STDERR_FILENO, inName, strlen (inName) );
++   write ( STDERR_FILENO, "\n", 1 );
++   msg = "\tOutput file = ";
++   write ( STDERR_FILENO, msg, strlen (msg) );
++   write ( STDERR_FILENO, outName, strlen (outName) );
++   write ( STDERR_FILENO, "\n", 1 );
+ 
+-   showFileNames();
+-   if (opMode == OM_Z)
+-      cleanUpAndFail( 3 ); else
+-      { cadvise(); cleanUpAndFail( 2 ); }
++   /* Don't call cleanupAndFail. If we ended up here something went
++      terribly wrong. Trying to clean up might fail spectacularly. */
++
++   if (opMode == OM_Z) setExit(3); else setExit(2);
++   _exit(exitValue);
+ }
+ 
+ 
+@@ -1757,8 +1767,8 @@
+          if (p[i] == 0) break;
+          p += i;
+          i = 0;
+-         while (isspace((Int32)(p[0]))) p++;
+-         while (p[i] != 0 && !isspace((Int32)(p[i]))) i++;
++         while (isspace((UChar)(p[0]))) p++;
++         while (p[i] != 0 && !isspace((UChar)(p[i]))) i++;
+          if (i > 0) {
+             k = i; if (k > FILE_NAME_LEN-10) k = FILE_NAME_LEN-10;
+             for (j = 0; j < k; j++) tmpName[j] = p[j];
+diff -ruN '--exclude=.git' '--exclude=*.1' '--exclude=*.ps' '--exclude=*.html' '--exclude=*.xml' '--exclude=*.txt' '--exclude=*.preformatted' '--exclude=.gitattributes' '--exclude=.gitignore' '--exclude=*.sh' bzip2-1.0.8/bzlib.c filc-proj/projects/bzip2/bzlib.c
+--- bzip2-1.0.8/bzlib.c	2026-10-30 19:45:34.397310965 +0200
++++ filc-proj/projects/bzip2/bzlib.c	2026-10-30 19:45:34.394952914 +0200
+@@ -1408,7 +1408,7 @@
+       case 's':
+          smallMode = 1; break;
+       default:
+-         if (isdigit((int)(*mode))) {
++         if (isdigit((unsigned char)(*mode))) {
+             blockSize100k = *mode-BZ_HDR_0;
+          }
+       }
+diff -ruN '--exclude=.git' '--exclude=*.1' '--exclude=*.ps' '--exclude=*.html' '--exclude=*.xml' '--exclude=*.txt' '--exclude=*.preformatted' '--exclude=.gitattributes' '--exclude=.gitignore' '--exclude=*.sh' bzip2-1.0.8/compress.c filc-proj/projects/bzip2/compress.c
+--- bzip2-1.0.8/compress.c	2026-10-30 19:45:34.397188224 +0200
++++ filc-proj/projects/bzip2/compress.c	2026-10-30 19:45:34.395043214 +0200
+@@ -321,7 +321,7 @@
+    ---*/
+    for (iter = 0; iter < BZ_N_ITERS; iter++) {
+ 
+-      for (t = 0; t < nGroups; t++) fave[t] = 0;
++      for (t = 0; t < BZ_N_GROUPS; t++) fave[t] = 0;
+ 
+       for (t = 0; t < nGroups; t++)
+          for (v = 0; v < alphaSize; v++)
+@@ -353,7 +353,7 @@
+             Calculate the cost of this group as coded
+             by each of the coding tables.
+          --*/
+-         for (t = 0; t < nGroups; t++) cost[t] = 0;
++         for (t = 0; t < BZ_N_GROUPS; t++) cost[t] = 0;
+ 
+          if (nGroups == 6 && 50 == ge-gs+1) {
+             /*--- fast track the common case ---*/
+diff -ruN '--exclude=.git' '--exclude=*.1' '--exclude=*.ps' '--exclude=*.html' '--exclude=*.xml' '--exclude=*.txt' '--exclude=*.preformatted' '--exclude=.gitattributes' '--exclude=.gitignore' '--exclude=*.sh' bzip2-1.0.8/Makefile filc-proj/projects/bzip2/Makefile
+--- bzip2-1.0.8/Makefile	2026-10-30 19:45:34.397509228 +0200
++++ filc-proj/projects/bzip2/Makefile	2026-10-30 19:45:34.394664641 +0200
+@@ -135,7 +135,7 @@
+ 
+ 
+ distclean: clean
+-	rm -f manual.ps manual.html manual.pdf
++	rm -f manual.ps manual.html manual.pdf bzip2.txt bzip2.1.preformatted
+ 
+ DISTNAME=bzip2-1.0.8
+ dist: check manual
+@@ -205,7 +205,13 @@
+ MANUAL_SRCS= 	bz-common.xsl bz-fo.xsl bz-html.xsl bzip.css \
+ 		entities.xml manual.xml 
+ 
+-manual: manual.html manual.ps manual.pdf
++bzip2.txt: bzip2.1
++	MANWIDTH=67 man --ascii ./$^ > $@
++
++bzip2.1.preformatted: bzip2.1
++	MAN_KEEP_FORMATTING=1 MANWIDTH=67 man -E UTF-8 ./$^ > $@
++
++manual: manual.html manual.ps manual.pdf bzip2.txt bzip2.1.preformatted
+ 
+ manual.ps: $(MANUAL_SRCS)
+ 	./xmlproc.sh -ps manual.xml
+Binary files bzip2-1.0.8/manual.pdf and filc-proj/projects/bzip2/manual.pdf differ

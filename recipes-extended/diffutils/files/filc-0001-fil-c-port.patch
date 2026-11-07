@@ -1,0 +1,19 @@
+Subject: [PATCH] Fil-C port for diffutils
+
+Ported from the upstream Fil-C project tree
+(github.com/pizlonator/fil-c, projects/diffutils).
+
+Upstream-Status: Pending
+---
+diff -ruN '--exclude=.git' diffutils-3.12/lib/sigsegv.c filc-proj/projects/diffutils-3.12/lib/sigsegv.c
+--- diffutils-3.12/lib/sigsegv.c	2025-03-26 04:11:07.000000000 +0200
++++ filc-proj/projects/diffutils-3.12/lib/sigsegv.c	2026-10-29 21:10:27.934541891 +0200
+@@ -1417,7 +1417,7 @@
+ stackoverflow_install_handler (stackoverflow_handler_t handler,
+                                void *extra_stack, size_t extra_stack_size)
+ {
+-#if HAVE_STACK_OVERFLOW_RECOVERY
++#if HAVE_STACK_OVERFLOW_RECOVERY && !defined(__FILC__)
+ # if HAVE_STACKVMA
+   if (!stack_top)
+     {

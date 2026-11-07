@@ -1,0 +1,70 @@
+Subject: [PATCH] Fil-C port for zstd
+
+Ported from the upstream Fil-C project tree
+(github.com/pizlonator/fil-c, projects/zstd).
+
+Upstream-Status: Pending
+---
+diff -ruN '--exclude=.git' zstd-1.5.7/lib/compress/zstd_compress_internal.h filc-proj/projects/zstd-1.5.7/lib/compress/zstd_compress_internal.h
+--- zstd-1.5.7/lib/compress/zstd_compress_internal.h	2025-02-19 02:04:24.000000000 +0200
++++ filc-proj/projects/zstd-1.5.7/lib/compress/zstd_compress_internal.h	2026-10-29 21:10:28.388548684 +0200
+@@ -630,7 +630,7 @@
+ MEM_STATIC const BYTE*
+ ZSTD_selectAddr(U32 index, U32 lowLimit, const BYTE* candidate, const BYTE* backup)
+ {
+-#if defined(__GNUC__) && defined(__x86_64__)
++#if defined(__GNUC__) && defined(__x86_64__) && !defined(__FILC__)
+     __asm__ (
+         "cmp %1, %2\n"
+         "cmova %3, %0\n"
+diff -ruN '--exclude=.git' zstd-1.5.7/lib/compress/zstd_lazy.c filc-proj/projects/zstd-1.5.7/lib/compress/zstd_lazy.c
+--- zstd-1.5.7/lib/compress/zstd_lazy.c	2025-02-19 02:04:24.000000000 +0200
++++ filc-proj/projects/zstd-1.5.7/lib/compress/zstd_lazy.c	2026-10-29 21:10:28.389543691 +0200
+@@ -1571,7 +1571,7 @@
+     }
+ 
+     /* Match Loop */
+-#if defined(__GNUC__) && defined(__x86_64__)
++#if defined(__GNUC__) && defined(__x86_64__) && !defined(__FILC__)
+     /* I've measured random a 5% speed loss on levels 5 & 6 (greedy) when the
+      * code alignment is perturbed. To fix the instability align the loop on 32-bytes.
+      */
+@@ -1969,7 +1969,7 @@
+     }
+ 
+     /* Match Loop */
+-#if defined(__GNUC__) && defined(__x86_64__)
++#if defined(__GNUC__) && defined(__x86_64__) && !defined(__FILC__)
+     /* I've measured random a 5% speed loss on levels 5 & 6 (greedy) when the
+      * code alignment is perturbed. To fix the instability align the loop on 32-bytes.
+      */
+diff -ruN '--exclude=.git' zstd-1.5.7/lib/decompress/zstd_decompress_block.c filc-proj/projects/zstd-1.5.7/lib/decompress/zstd_decompress_block.c
+--- zstd-1.5.7/lib/decompress/zstd_decompress_block.c	2025-02-19 02:04:24.000000000 +0200
++++ filc-proj/projects/zstd-1.5.7/lib/decompress/zstd_decompress_block.c	2026-10-29 21:10:28.394543710 +0200
+@@ -1481,7 +1481,7 @@
+                 *
+                 *   https://gist.github.com/terrelln/9889fc06a423fd5ca6e99351564473f4
+                 */
+-#if defined(__GNUC__) && defined(__x86_64__)
++#if defined(__GNUC__) && defined(__x86_64__) && !defined(__FILC__)
+             __asm__(".p2align 6");
+ #  if __GNUC__ >= 7
+ 	    /* good for gcc-7, gcc-9, and gcc-11 */
+@@ -1543,7 +1543,7 @@
+         if (nbSeq > 0) {
+             /* there is remaining lit from extra buffer */
+ 
+-#if defined(__GNUC__) && defined(__x86_64__)
++#if defined(__GNUC__) && defined(__x86_64__) && !defined(__FILC__)
+             __asm__(".p2align 6");
+             __asm__("nop");
+ #  if __GNUC__ != 7
+@@ -1642,7 +1642,7 @@
+         ZSTD_initFseState(&seqState.stateML, &seqState.DStream, dctx->MLTptr);
+         assert(dst != NULL);
+ 
+-#if defined(__GNUC__) && defined(__x86_64__)
++#if defined(__GNUC__) && defined(__x86_64__) && !defined(__FILC__)
+             __asm__(".p2align 6");
+             __asm__("nop");
+ #  if __GNUC__ >= 7

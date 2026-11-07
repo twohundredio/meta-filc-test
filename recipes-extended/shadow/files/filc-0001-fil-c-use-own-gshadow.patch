@@ -1,0 +1,191 @@
+Subject: [PATCH] Fil-C port for shadow: always use shadow's own gshadow API
+
+The fil-c musl pizfix has no gshadow API (no <gshadow.h>, no getsgent
+family), but the OE target sysroot still carries glibc's <gshadow.h> via
+the toolchain's -idirafter, so shadow's __has_include(<gshadow.h>)
+guards select glibc's declarations and compile out shadow's own
+implementations, leaving pizlonated_*sgent references undefined at link.
+Force the guards off so shadow always uses its own gshadow code.
+
+Upstream-Status: Pending
+---
+diff -ruN a/lib/shadow/gshadow/endsgent.c b/lib/shadow/gshadow/endsgent.c
+--- a/lib/shadow/gshadow/endsgent.c	2025-12-15 13:15:32.213315030 +0200
++++ b/lib/shadow/gshadow/endsgent.c	2026-11-01 10:04:54.590182457 +0200
+@@ -16,7 +16,7 @@
+ #include "shadow/gshadow/gshadow.h"
+ 
+ 
+-#if defined(SHADOWGRP) && !__has_include(<gshadow.h>)
++#if defined(SHADOWGRP) && !0
+ // end-working-with shadow group entries
+ void
+ endsgent(void)
+diff -ruN a/lib/shadow/gshadow/endsgent.h b/lib/shadow/gshadow/endsgent.h
+--- a/lib/shadow/gshadow/endsgent.h	2025-12-15 13:15:32.213384959 +0200
++++ b/lib/shadow/gshadow/endsgent.h	2026-11-01 10:04:54.533558638 +0200
+@@ -12,7 +12,7 @@
+ #include "config.h"
+ 
+ 
+-#if __has_include(<gshadow.h>)
++#if 0
+ # include <gshadow.h>
+ #else
+ void endsgent(void);
+diff -ruN a/lib/shadow/gshadow/fgetsgent.c b/lib/shadow/gshadow/fgetsgent.c
+--- a/lib/shadow/gshadow/fgetsgent.c	2026-03-01 17:57:26.389026603 +0200
++++ b/lib/shadow/gshadow/fgetsgent.c	2026-11-01 10:04:54.590209127 +0200
+@@ -29,7 +29,7 @@
+  * fgetsgent() reads the next line from the provided stream and
+  * converts it to a (struct sgrp).  NULL is returned on EOF.
+  */
+-#if defined(SHADOWGRP) && !__has_include(<gshadow.h>)
++#if defined(SHADOWGRP) && !0
+ // from-FILE get-next shadow group entry
+ struct sgrp *
+ fgetsgent(FILE *fp)
+diff -ruN a/lib/shadow/gshadow/fgetsgent.h b/lib/shadow/gshadow/fgetsgent.h
+--- a/lib/shadow/gshadow/fgetsgent.h	2025-12-15 13:15:32.213384959 +0200
++++ b/lib/shadow/gshadow/fgetsgent.h	2026-11-01 10:04:54.533607700 +0200
+@@ -16,7 +16,7 @@
+ #include "shadow/gshadow/sgrp.h"
+ 
+ 
+-#if __has_include(<gshadow.h>)
++#if 0
+ # include <gshadow.h>
+ #else
+ struct sgrp *fgetsgent(FILE *stream);
+diff -ruN a/lib/shadow/gshadow/getsgent.c b/lib/shadow/gshadow/getsgent.c
+--- a/lib/shadow/gshadow/getsgent.c	2025-12-15 13:15:32.213384959 +0200
++++ b/lib/shadow/gshadow/getsgent.c	2026-11-01 10:04:54.590339081 +0200
+@@ -18,7 +18,7 @@
+ #include "shadow/gshadow/sgrp.h"
+ 
+ 
+-#if defined(SHADOWGRP) && !__has_include(<gshadow.h>)
++#if defined(SHADOWGRP) && !0
+ // get-next shadow group entry
+ struct sgrp *
+ getsgent(void)
+diff -ruN a/lib/shadow/gshadow/getsgent.h b/lib/shadow/gshadow/getsgent.h
+--- a/lib/shadow/gshadow/getsgent.h	2025-12-15 13:15:32.213384959 +0200
++++ b/lib/shadow/gshadow/getsgent.h	2026-11-01 10:04:54.533474721 +0200
+@@ -14,7 +14,7 @@
+ #include "shadow/gshadow/sgrp.h"
+ 
+ 
+-#if __has_include(<gshadow.h>)
++#if 0
+ # include <gshadow.h>
+ #else
+ struct sgrp *getsgent(void);
+diff -ruN a/lib/shadow/gshadow/getsgnam.c b/lib/shadow/gshadow/getsgnam.c
+--- a/lib/shadow/gshadow/getsgnam.c	2025-12-15 13:15:32.213384959 +0200
++++ b/lib/shadow/gshadow/getsgnam.c	2026-11-01 10:04:54.590286462 +0200
+@@ -22,7 +22,7 @@
+ /*
+  * getsgnam - get a shadow group entry by name
+  */
+-#if defined(SHADOWGRP) && !__has_include(<gshadow.h>)
++#if defined(SHADOWGRP) && !0
+ // get shadow group entry-by-name
+ struct sgrp *
+ getsgnam(const char *name)
+diff -ruN a/lib/shadow/gshadow/getsgnam.h b/lib/shadow/gshadow/getsgnam.h
+--- a/lib/shadow/gshadow/getsgnam.h	2025-12-15 13:15:32.213384959 +0200
++++ b/lib/shadow/gshadow/getsgnam.h	2026-11-01 10:04:54.533506861 +0200
+@@ -14,7 +14,7 @@
+ #include "shadow/gshadow/sgrp.h"
+ 
+ 
+-#if __has_include(<gshadow.h>)
++#if 0
+ # include <gshadow.h>
+ #else
+ struct sgrp *getsgnam(const char *);
+diff -ruN a/lib/shadow/gshadow/putsgent.c b/lib/shadow/gshadow/putsgent.c
+--- a/lib/shadow/gshadow/putsgent.c	2026-02-26 18:44:53.222693477 +0200
++++ b/lib/shadow/gshadow/putsgent.c	2026-11-01 10:04:54.590261275 +0200
+@@ -27,7 +27,7 @@
+  * writes the result to the given stream.  This is the logical
+  * opposite of fgetsgent.
+  */
+-#if defined(SHADOWGRP) && !__has_include(<gshadow.h>)
++#if defined(SHADOWGRP) && !0
+ // put shadow group entry
+ int
+ putsgent(const struct sgrp *sgrp, FILE *fp)
+diff -ruN a/lib/shadow/gshadow/putsgent.h b/lib/shadow/gshadow/putsgent.h
+--- a/lib/shadow/gshadow/putsgent.h	2025-12-15 13:15:32.213384959 +0200
++++ b/lib/shadow/gshadow/putsgent.h	2026-11-01 10:04:54.533681489 +0200
+@@ -16,7 +16,7 @@
+ #include "shadow/gshadow/sgrp.h"
+ 
+ 
+-#if __has_include(<gshadow.h>)
++#if 0
+ # include <gshadow.h>
+ #else
+ int putsgent(const struct sgrp *sgrp, FILE *fp);
+diff -ruN a/lib/shadow/gshadow/setsgent.c b/lib/shadow/gshadow/setsgent.c
+--- a/lib/shadow/gshadow/setsgent.c	2025-12-15 13:15:32.213384959 +0200
++++ b/lib/shadow/gshadow/setsgent.c	2026-11-01 10:04:54.590153062 +0200
+@@ -17,7 +17,7 @@
+ #include "shadow/gshadow/gshadow.h"
+ 
+ 
+-#if defined(SHADOWGRP) && !__has_include(<gshadow.h>)
++#if defined(SHADOWGRP) && !0
+ // set-resources-for-working-with shadow group entries
+ void
+ setsgent(void)
+diff -ruN a/lib/shadow/gshadow/setsgent.h b/lib/shadow/gshadow/setsgent.h
+--- a/lib/shadow/gshadow/setsgent.h	2025-12-15 13:15:32.213384959 +0200
++++ b/lib/shadow/gshadow/setsgent.h	2026-11-01 10:04:54.533632237 +0200
+@@ -12,7 +12,7 @@
+ #include "config.h"
+ 
+ 
+-#if __has_include(<gshadow.h>)
++#if 0
+ # include <gshadow.h>
+ #else
+ void setsgent(void);
+diff -ruN a/lib/shadow/gshadow/sgetsgent.c b/lib/shadow/gshadow/sgetsgent.c
+--- a/lib/shadow/gshadow/sgetsgent.c	2026-03-01 17:57:26.389026603 +0200
++++ b/lib/shadow/gshadow/sgetsgent.c	2026-11-01 10:04:54.590313863 +0200
+@@ -21,7 +21,7 @@
+ #include "string/strtok/strsep2arr.h"
+ 
+ 
+-#if defined(SHADOWGRP) && !__has_include(<gshadow.h>)
++#if defined(SHADOWGRP) && !0
+ static struct sgrp  sgroup = {};
+ 
+ 
+diff -ruN a/lib/shadow/gshadow/sgetsgent.h b/lib/shadow/gshadow/sgetsgent.h
+--- a/lib/shadow/gshadow/sgetsgent.h	2026-02-23 16:02:49.314064304 +0200
++++ b/lib/shadow/gshadow/sgetsgent.h	2026-11-01 10:04:54.533583154 +0200
+@@ -14,7 +14,7 @@
+ #include "shadow/gshadow/sgrp.h"
+ 
+ 
+-#if __has_include(<gshadow.h>)
++#if 0
+ # include <gshadow.h>
+ #else
+ struct sgrp *sgetsgent(const char *);
+diff -ruN a/lib/shadow/gshadow/sgrp.h b/lib/shadow/gshadow/sgrp.h
+--- a/lib/shadow/gshadow/sgrp.h	2025-12-15 13:15:32.213384959 +0200
++++ b/lib/shadow/gshadow/sgrp.h	2026-11-01 10:04:54.533533491 +0200
+@@ -12,7 +12,7 @@
+ #include "config.h"
+ 
+ 
+-#if __has_include(<gshadow.h>)
++#if 0
+ # include <gshadow.h>
+ #else
+ struct sgrp {

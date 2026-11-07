@@ -1,0 +1,21 @@
+Subject: [PATCH] Fil-C port for libxcrypt
+
+Ported from github.com/pizlonator/fil-c projects/libxcrypt-4.5.2.
+Only the source hunk is kept: oe-core builds libxcrypt from the git
+tree, which has no autotools-generated Makefile.in for the second hunk.
+
+Upstream-Status: Pending
+---
+diff -ruN '--exclude=.git' libxcrypt-oe/lib/alg-yescrypt-opt.c filc-proj/projects/libxcrypt-4.5.2/lib/alg-yescrypt-opt.c
+--- libxcrypt-oe/lib/alg-yescrypt-opt.c	2025-11-05 11:49:40.000000000 +0200
++++ filc-proj/projects/libxcrypt-4.5.2/lib/alg-yescrypt-opt.c	2026-10-29 21:10:28.254543157 +0200
+@@ -30,6 +30,9 @@
+ 
+ #include "crypt-port.h"
+ 
++#undef __SSE2__
++#undef __SSE__
++
+ #if INCLUDE_yescrypt || INCLUDE_scrypt || INCLUDE_gost_yescrypt || \
+     INCLUDE_sm3_yescrypt
+ 

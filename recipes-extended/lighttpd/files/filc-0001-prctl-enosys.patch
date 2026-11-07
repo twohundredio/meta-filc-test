@@ -1,0 +1,20 @@
+Subject: [PATCH] lighttpd: tolerate ENOSYS from prctl(PR_CAP_AMBIENT_CLEAR_ALL)
+
+fil-c's musl pizfix libc does not implement the PR_CAP_AMBIENT prctl subcall
+and returns ENOSYS; lighttpd only tolerated EINVAL and treated anything else
+as fatal (exit 255 right after startup, config test -tt included). Accept
+ENOSYS too (same "not supported" semantics as the existing EINVAL case).
+
+Upstream-Status: Pending
+---
+--- a/src/server.c
++++ b/src/server.c
+@@ -1903,7 +1903,7 @@
+ 	 * (avoid leaking privileges to CGI or other subprocesses) */
+ 	if (prctl(PR_CAP_AMBIENT, PR_CAP_AMBIENT_CLEAR_ALL, 0L, 0L, 0L) < 0
+            /* not supported before linux 4.3 / on some emulators (e.g. Cloud Run 1st gen) */
+-           && errno != EINVAL) {
++           && errno != EINVAL && errno != ENOSYS) {
+ 		log_perror(srv->errh, __FILE__, __LINE__,
+ 		  "prctl(PR_CAP_AMBIENT, PR_CAP_AMBIENT_CLEAR_ALL)");
+ 		return -1;

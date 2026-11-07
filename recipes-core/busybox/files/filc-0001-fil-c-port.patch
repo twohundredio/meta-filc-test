@@ -1,0 +1,27 @@
+Subject: [PATCH] Fil-C port for busybox
+
+not_const_pp: replace pointer-returning inline asm (unsupported by fil-c)
+with a plain cast.
+
+Upstream-Status: Pending
+---
+diff -ruN '--exclude=.git' busybox-1.37.0/include/libbb.h mod/include/libbb.h
+--- busybox-1.37.0/include/libbb.h	2026-10-30 23:28:09.938239272 +0200
++++ mod/include/libbb.h	2026-10-30 23:28:09.997592481 +0200
+@@ -2328,13 +2328,9 @@
+  */
+ static ALWAYS_INLINE void* not_const_pp(const void *p)
+ {
+-	void *pp;
+-	asm volatile (
+-		"# forget that p points to const"
+-		: /*outputs*/ "=r" (pp)
+-		: /*inputs*/ "0" (p)
+-	);
+-	return pp;
++	/* Fil-C port: inline asm with a pointer output is not supported;
++	   a plain cast is equivalent here. */
++	return (void *)(uintptr_t)p;
+ }
+ # define ASSIGN_CONST_PTR(pptr, v) do { \
+ 	*(void**)not_const_pp(pptr) = (void*)(v); \

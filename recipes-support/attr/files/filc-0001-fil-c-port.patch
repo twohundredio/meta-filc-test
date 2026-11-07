@@ -1,0 +1,29 @@
+Subject: [PATCH] Fil-C port for attr
+
+Ported from the upstream Fil-C project tree
+(github.com/pizlonator/fil-c, projects/).
+
+Upstream-Status: Pending
+---
+diff -ruN '--exclude=.git' '--exclude=*.rej' '--exclude=*.orig' attr-2.5.2/libattr/Makemodule.am mod/libattr/Makemodule.am
+--- attr-2.5.2/libattr/Makemodule.am	2023-12-01 14:02:32.000000000 +0200
++++ mod/libattr/Makemodule.am	2026-10-30 20:00:45.167558360 +0200
+@@ -26,5 +26,5 @@
+ endif
+ libattr_la_CFLAGS = -include libattr/libattr.h
+ libattr_la_LDFLAGS = \
+-	-Wl,--version-script,$(top_srcdir)/exports \
++	-Wc,--version-script=$(top_srcdir)/exports \
+ 	-version-info $(LTVERSION)
+diff -ruN '--exclude=.git' '--exclude=*.rej' '--exclude=*.orig' attr-2.5.2/Makefile.in mod/Makefile.in
+--- attr-2.5.2/Makefile.in	2024-01-14 04:39:48.000000000 +0200
++++ mod/Makefile.in	2026-10-30 20:00:45.167985394 +0200
+@@ -711,7 +711,7 @@
+ 	$(am__append_1)
+ libattr_la_CFLAGS = -include libattr/libattr.h
+ libattr_la_LDFLAGS = \
+-	-Wl,--version-script,$(top_srcdir)/exports \
++	-Wc,--version-script=$(top_srcdir)/exports \
+ 	-version-info $(LTVERSION)
+ 
+ libmisc_la_SOURCES = \

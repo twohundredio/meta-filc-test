@@ -1,0 +1,109 @@
+#
+# kas - setup tool for bitbake based projects
+#
+# Copyright (c) Siemens AG, 2022-2025
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
+
+header:
+  version: 1
+
+
+machine: qemuarm64
+distro: poky
+
+target:
+  - core-image-minimal
+  - fil-c-native
+
+local_conf_header:
+
+  dev-image: |
+    # development images: empty root password + auto-login as root on
+    # the serial console, and SSH (root, empty password) for remote
+    # access. For production, replace with a real password
+    # (EXTRA_USERS or a custom image recipe) and drop these features.
+    EXTRA_IMAGE_FEATURES:append = " empty-root-password serial-autologin-root allow-empty-password allow-root-login"
+
+    #MAGE_INSTALL:append = " iproute2 iproute2-bridge iproute2-tc ethtool"
+    #IMAGE_INSTALL:append = " mtd-utils"
+
+    # openssh sshd in the image (packagegroup-core-ssh-openssh). Host keys
+    # are generated at first start by /etc/init.d/sshd -> sshd_check_keys;
+    # the sysvinit script auto-starts sshd at runlevel 2-5.
+    EXTRA_IMAGE_FEATURES:append = " ssh-server-openssh"
+
+    # fil-c compiler (recipes-devtools/fil-c/, prebuilt binary dist under
+    # /opt/filc) inside the image, so the qemuarm64 system can compile with
+    # filcc instead of gcc
+    #IMAGE_INSTALL:append = " fil-c"
+
+  toolchain: |
+    # build target userspace with fil-c (classes/toolchain/fil-c.bbclass)
+    # instead of gcc; the compiler itself comes from the prebuilt
+    # fil-c-native build tool. Select via PREFERRED_TOOLCHAIN_TARGET (not
+    # TOOLCHAIN directly): base.bbclass maps PREFERRED_TOOLCHAIN -> TOOLCHAIN
+    # per class, so class-native/class-cross/class-nativesdk keep the host
+    # gcc toolchain and only target recipes inherit toolchain/fil-c.bbclass.
+    PREFERRED_TOOLCHAIN_TARGET = "fil-c"
+    # no ptest: gnulib test suites use glibc-only APIs that fil-c's musl
+    # pizfix doesn't provide, and we don't run tests in this image anyway
+    # no ldconfig: the ldconfig distro feature pulls the target glibc
+    # ldconfig+libc6 into the image; fil-c binaries use the pizfix loader
+    # (ld-fil1) at a fixed path and never need a glibc ld.so cache
+    DISTRO_FEATURES:remove = "ptest ldconfig"
+
+    # do_image_complete stages image outputs into the shared ${DEPLOY_DIR_IMAGE}
+    # (do_image_complete[sstate-outputdirs]). When a recipe sig change makes
+    # bitbake drop the old sstate manifest ("Removing stale sstate objects"),
+    # the already-deployed file is left behind "not matched to any task" and
+    # sstate.bbclass fatals with "trying to install files into a shared area"
+    # on every later build. Image deploy files are per-recipe named and
+    # timestamped, so allow overlap in the whole image deploy dir (OE-core
+    # already whitelists the bootloader subdirs there the same way).
+    SSTATE_ALLOW_OVERLAP_FILES:append = " ${DEPLOY_DIR_IMAGE}"
+
+repos:
+  bitbake:
+    url: https://git.openembedded.org/bitbake
+    tag: yocto-6.0.4
+    commit: 51fd94a67fa17650a9ff623492005972bbc7d26f
+    layers: {}
+
+  yocto:
+    url: https://git.yoctoproject.org/meta-yocto
+    # when specifying a tag, optionally provide a commit hash
+    tag: yocto-6.0.4
+    commit: 7c25b11156553145fa6b241a2d4f65d94438f804
+    layers:
+      meta-yocto-bsp:
+      meta-poky:
+
+  openembedded-core:
+    url: https://git.openembedded.org/openembedded-core
+    # when specifying a tag, optionally provide a commit hash
+    tag: yocto-6.0.4
+    commit: 0f03c732a0a2d0506b41b1abe60b3f368b2300dc
+    layers:
+      meta:
+
+  meta-fil-c:
+    layers:
+      meta-fil-c:

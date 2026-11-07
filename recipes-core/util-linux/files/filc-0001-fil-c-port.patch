@@ -1,0 +1,157 @@
+Subject: [PATCH] Fil-C port for util-linux
+
+Spell the version-script linker flag as -Wc,--version-script=FILE (filcc
+0.687 driver) so pizlonated symbols are exported from the lib*.so.
+
+Upstream-Status: Pending
+---
+diff -ruN '--exclude=.git' util-linux-2.41.5/libblkid/src/Makemodule.am mod/libblkid/src/Makemodule.am
+--- util-linux-2.41.5/libblkid/src/Makemodule.am	2026-06-16 13:59:53.751422695 +0300
++++ mod/libblkid/src/Makemodule.am	2026-10-30 21:58:39.270680240 +0200
+@@ -133,7 +133,7 @@
+ 
+ libblkid_la_LDFLAGS = $(SOLIB_LDFLAGS)
+ if HAVE_VSCRIPT
+-libblkid_la_LDFLAGS += $(VSCRIPT_LDFLAGS),$(top_srcdir)/libblkid/src/libblkid.sym
++libblkid_la_LDFLAGS += -Wc,--version-script=$(top_srcdir)/libblkid/src/libblkid.sym
+ endif
+ libblkid_la_LDFLAGS += -version-info $(LIBBLKID_VERSION_INFO)
+ 
+diff -ruN '--exclude=.git' util-linux-2.41.5/libfdisk/src/Makemodule.am mod/libfdisk/src/Makemodule.am
+--- util-linux-2.41.5/libfdisk/src/Makemodule.am	2026-06-16 13:59:53.754422683 +0300
++++ mod/libfdisk/src/Makemodule.am	2026-10-30 21:58:39.270749851 +0200
+@@ -45,7 +45,7 @@
+ 
+ libfdisk_la_LDFLAGS = $(SOLIB_LDFLAGS)
+ if HAVE_VSCRIPT
+-libfdisk_la_LDFLAGS += $(VSCRIPT_LDFLAGS),$(top_srcdir)/libfdisk/src/libfdisk.sym
++libfdisk_la_LDFLAGS += -Wc,--version-script=$(top_srcdir)/libfdisk/src/libfdisk.sym
+ endif
+ libfdisk_la_LDFLAGS += -version-info $(LIBFDISK_VERSION_INFO)
+ 
+diff -ruN '--exclude=.git' util-linux-2.41.5/liblastlog2/src/Makemodule.am mod/liblastlog2/src/Makemodule.am
+--- util-linux-2.41.5/liblastlog2/src/Makemodule.am	2026-06-16 13:59:53.756422675 +0300
++++ mod/liblastlog2/src/Makemodule.am	2026-10-30 21:58:39.270791339 +0200
+@@ -21,7 +21,7 @@
+ 
+ liblastlog2_la_LDFLAGS = $(SOLIB_LDFLAGS)
+ if HAVE_VSCRIPT
+-liblastlog2_la_LDFLAGS += $(VSCRIPT_LDFLAGS),$(top_srcdir)/liblastlog2/src/liblastlog2.sym
++liblastlog2_la_LDFLAGS += -Wc,--version-script=$(top_srcdir)/liblastlog2/src/liblastlog2.sym
+ endif
+ liblastlog2_la_LDFLAGS += -version-info $(LIBLASTLOG2_VERSION_INFO)
+ 
+diff -ruN '--exclude=.git' util-linux-2.41.5/libmount/src/Makemodule.am mod/libmount/src/Makemodule.am
+--- util-linux-2.41.5/libmount/src/Makemodule.am	2026-06-16 13:59:53.756422675 +0300
++++ mod/libmount/src/Makemodule.am	2026-10-30 21:58:39.270826756 +0200
+@@ -78,7 +78,7 @@
+ 
+ libmount_la_LDFLAGS = $(SOLIB_LDFLAGS)
+ if HAVE_VSCRIPT
+-libmount_la_LDFLAGS += $(VSCRIPT_LDFLAGS),$(top_srcdir)/libmount/src/libmount.sym
++libmount_la_LDFLAGS += -Wc,--version-script=$(top_srcdir)/libmount/src/libmount.sym
+ endif
+ libmount_la_LDFLAGS += -version-info $(LIBMOUNT_VERSION_INFO)
+ 
+diff -ruN '--exclude=.git' util-linux-2.41.5/libsmartcols/src/Makemodule.am mod/libsmartcols/src/Makemodule.am
+--- util-linux-2.41.5/libsmartcols/src/Makemodule.am	2026-04-28 12:11:39.486776480 +0300
++++ mod/libsmartcols/src/Makemodule.am	2026-10-30 21:58:39.270868624 +0200
+@@ -98,7 +98,7 @@
+ 
+ libsmartcols_la_LDFLAGS = $(SOLIB_LDFLAGS)
+ if HAVE_VSCRIPT
+-libsmartcols_la_LDFLAGS += $(VSCRIPT_LDFLAGS),$(top_srcdir)/libsmartcols/src/libsmartcols.sym
++libsmartcols_la_LDFLAGS += -Wc,--version-script=$(top_srcdir)/libsmartcols/src/libsmartcols.sym
+ endif
+ libsmartcols_la_LDFLAGS += -version-info $(LIBSMARTCOLS_VERSION_INFO)
+ 
+diff -ruN '--exclude=.git' util-linux-2.41.5/libuuid/src/Makemodule.am mod/libuuid/src/Makemodule.am
+--- util-linux-2.41.5/libuuid/src/Makemodule.am	2026-06-16 13:59:53.762422650 +0300
++++ mod/libuuid/src/Makemodule.am	2026-10-30 21:58:39.270902218 +0200
+@@ -47,7 +47,7 @@
+ 
+ libuuid_la_LDFLAGS = $(SOLIB_LDFLAGS)
+ if HAVE_VSCRIPT
+-libuuid_la_LDFLAGS += $(VSCRIPT_LDFLAGS),$(top_srcdir)/libuuid/src/libuuid.sym
++libuuid_la_LDFLAGS += -Wc,--version-script=$(top_srcdir)/libuuid/src/libuuid.sym
+ endif
+ libuuid_la_LDFLAGS += -version-info $(LIBUUID_VERSION_INFO)
+ 
+diff -ruN '--exclude=.git' util-linux-2.41.5/Makefile.in mod/Makefile.in
+--- util-linux-2.41.5/Makefile.in	2026-06-16 14:24:38.825464362 +0300
++++ mod/Makefile.in	2026-10-30 21:58:39.268981717 +0200
+@@ -230,7 +230,7 @@
+ 
+ @BUILD_LIBUUID_TRUE@am__append_23 = test_uuid_parser test_uuid_time
+ @BUILD_LIBUUID_TRUE@am__append_24 = libuuid.la
+-@BUILD_LIBUUID_TRUE@@HAVE_VSCRIPT_TRUE@am__append_25 = $(VSCRIPT_LDFLAGS),$(top_srcdir)/libuuid/src/libuuid.sym
++@BUILD_LIBUUID_TRUE@@HAVE_VSCRIPT_TRUE@am__append_25 = -Wc,--version-script=$(top_srcdir)/libuuid/src/libuuid.sym
+ @BUILD_LIBUUID_TRUE@am__append_26 = libuuid/src/libuuid.sym \
+ @BUILD_LIBUUID_TRUE@	libuuid/COPYING
+ @BUILD_LIBUUID_TRUE@am__append_27 = install-exec-hook-libuuid
+@@ -258,7 +258,7 @@
+ @BUILD_LIBLASTLOG2_TRUE@	liblastlog2/man/ll2_write_entry.3.adoc
+ 
+ @BUILD_LIBLASTLOG2_TRUE@am__append_33 = liblastlog2.la
+-@BUILD_LIBLASTLOG2_TRUE@@HAVE_VSCRIPT_TRUE@am__append_34 = $(VSCRIPT_LDFLAGS),$(top_srcdir)/liblastlog2/src/liblastlog2.sym
++@BUILD_LIBLASTLOG2_TRUE@@HAVE_VSCRIPT_TRUE@am__append_34 = -Wc,--version-script=$(top_srcdir)/liblastlog2/src/liblastlog2.sym
+ @BUILD_LIBLASTLOG2_TRUE@am__append_35 =  \
+ @BUILD_LIBLASTLOG2_TRUE@	liblastlog2/src/liblastlog2.sym \
+ @BUILD_LIBLASTLOG2_TRUE@	liblastlog2/COPYING
+@@ -285,7 +285,7 @@
+ @BUILD_LIBBLKID_TRUE@@LINUX_TRUE@	libblkid/src/topology/sysfs.c
+ 
+ @BUILD_LIBBLKID_TRUE@@HAVE_ECONF_TRUE@am__append_43 = -leconf
+-@BUILD_LIBBLKID_TRUE@@HAVE_VSCRIPT_TRUE@am__append_44 = $(VSCRIPT_LDFLAGS),$(top_srcdir)/libblkid/src/libblkid.sym
++@BUILD_LIBBLKID_TRUE@@HAVE_VSCRIPT_TRUE@am__append_44 = -Wc,--version-script=$(top_srcdir)/libblkid/src/libblkid.sym
+ @BUILD_LIBBLKID_TRUE@am__append_45 = libblkid/src/libblkid.sym \
+ @BUILD_LIBBLKID_TRUE@	libblkid/COPYING
+ @BUILD_LIBBLKID_TESTS_TRUE@@BUILD_LIBBLKID_TRUE@am__append_46 = \
+@@ -338,7 +338,7 @@
+ @BUILD_LIBMOUNT_TRUE@@HAVE_BTRFS_TRUE@@LINUX_TRUE@am__append_59 = libmount/src/btrfs.c
+ @BUILD_LIBMOUNT_TRUE@@CRYPTSETUP_VIA_DLOPEN_TRUE@@HAVE_CRYPTSETUP_TRUE@am__append_60 = -ldl
+ @BUILD_LIBMOUNT_TRUE@@CRYPTSETUP_VIA_DLOPEN_FALSE@@HAVE_CRYPTSETUP_TRUE@am__append_61 = $(CRYPTSETUP_LIBS)
+-@BUILD_LIBMOUNT_TRUE@@HAVE_VSCRIPT_TRUE@am__append_62 = $(VSCRIPT_LDFLAGS),$(top_srcdir)/libmount/src/libmount.sym
++@BUILD_LIBMOUNT_TRUE@@HAVE_VSCRIPT_TRUE@am__append_62 = -Wc,--version-script=$(top_srcdir)/libmount/src/libmount.sym
+ @BUILD_LIBMOUNT_TRUE@am__append_63 = libmount/src/libmount.sym \
+ @BUILD_LIBMOUNT_TRUE@	libmount/COPYING
+ @BUILD_LIBMOUNT_TESTS_TRUE@@BUILD_LIBMOUNT_TRUE@am__append_64 = \
+@@ -391,7 +391,7 @@
+ @BUILD_LIBSMARTCOLS_TRUE@	$(SCOLS_LEX_STEMP) \
+ @BUILD_LIBSMARTCOLS_TRUE@	libsmartcols/src/libsmartcols.sym \
+ @BUILD_LIBSMARTCOLS_TRUE@	libsmartcols/COPYING
+-@BUILD_LIBSMARTCOLS_TRUE@@HAVE_VSCRIPT_TRUE@am__append_81 = $(VSCRIPT_LDFLAGS),$(top_srcdir)/libsmartcols/src/libsmartcols.sym
++@BUILD_LIBSMARTCOLS_TRUE@@HAVE_VSCRIPT_TRUE@am__append_81 = -Wc,--version-script=$(top_srcdir)/libsmartcols/src/libsmartcols.sym
+ @BUILD_LIBSMARTCOLS_TRUE@am__append_82 = install-exec-hook-libsmartcols
+ @BUILD_LIBSMARTCOLS_TRUE@am__append_83 = uninstall-hook-libsmartcols
+ @BUILD_LIBSMARTCOLS_TRUE@am__append_84 = \
+@@ -415,7 +415,7 @@
+ @BUILD_LIBSMARTCOLS_TRUE@am__append_89 = libsmartcols/scols-filter.5
+ @BUILD_LIBSMARTCOLS_TRUE@am__append_90 = libsmartcols/scols-filter.5.adoc
+ @BUILD_LIBFDISK_TRUE@am__append_91 = libfdisk.la
+-@BUILD_LIBFDISK_TRUE@@HAVE_VSCRIPT_TRUE@am__append_92 = $(VSCRIPT_LDFLAGS),$(top_srcdir)/libfdisk/src/libfdisk.sym
++@BUILD_LIBFDISK_TRUE@@HAVE_VSCRIPT_TRUE@am__append_92 = -Wc,--version-script=$(top_srcdir)/libfdisk/src/libfdisk.sym
+ @BUILD_LIBBLKID_TRUE@@BUILD_LIBFDISK_TRUE@am__append_93 = libblkid.la
+ @BUILD_LIBBLKID_TRUE@@BUILD_LIBFDISK_TRUE@am__append_94 = -I$(ul_libblkid_incdir)
+ @BUILD_LIBFDISK_TRUE@am__append_95 = libfdisk/src/libfdisk.sym \
+@@ -1026,7 +1026,7 @@
+ @BUILD_PAM_LASTLOG2_TRUE@	pam_lastlog2/man/pam_lastlog2.8.adoc
+ 
+ @BUILD_PAM_LASTLOG2_TRUE@am__append_607 = pam_lastlog2.la
+-@BUILD_PAM_LASTLOG2_TRUE@@HAVE_VSCRIPT_TRUE@am__append_608 = $(VSCRIPT_LDFLAGS),$(top_srcdir)/pam_lastlog2/src/pam_lastlog2.sym
++@BUILD_PAM_LASTLOG2_TRUE@@HAVE_VSCRIPT_TRUE@am__append_608 = -Wc,--version-script=$(top_srcdir)/pam_lastlog2/src/pam_lastlog2.sym
+ @BUILD_PAM_LASTLOG2_TRUE@am__append_609 =  \
+ @BUILD_PAM_LASTLOG2_TRUE@	pam_lastlog2/src/pam_lastlog2.sym \
+ @BUILD_PAM_LASTLOG2_TRUE@	pam_lastlog2/COPYING \
+diff -ruN '--exclude=.git' util-linux-2.41.5/pam_lastlog2/src/Makemodule.am mod/pam_lastlog2/src/Makemodule.am
+--- util-linux-2.41.5/pam_lastlog2/src/Makemodule.am	2026-06-09 12:39:48.967828611 +0300
++++ mod/pam_lastlog2/src/Makemodule.am	2026-10-30 21:58:39.270951681 +0200
+@@ -15,7 +15,7 @@
+ 
+ pam_lastlog2_la_LDFLAGS = $(SOLIB_LDFLAGS) -module -avoid-version -shared
+ if HAVE_VSCRIPT
+-pam_lastlog2_la_LDFLAGS += $(VSCRIPT_LDFLAGS),$(top_srcdir)/pam_lastlog2/src/pam_lastlog2.sym
++pam_lastlog2_la_LDFLAGS += -Wc,--version-script=$(top_srcdir)/pam_lastlog2/src/pam_lastlog2.sym
+ endif
+ 
+ EXTRA_DIST += pam_lastlog2/src/pam_lastlog2.sym
