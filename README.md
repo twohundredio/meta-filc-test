@@ -1,5 +1,9 @@
 # meta-filc-test — fil-c as the Yocto toolchain on qemuarm64
 
+> **Warning:** This project is AI generated. The patches have **not** been
+> reviewed or checked, and they could introduce security issues. Do not use
+> this in production or anywhere untrusted without a full audit.
+
 Builds `core-image-minimal` for `qemuarm64` with a **100% fil-c userspace**.
 The compiler is the prebuilt fil-c dist (`fil-c-native`, see
 `recipes-devtools/fil-c/`), driven as the cross toolchain by
@@ -55,6 +59,6 @@ Then from the host:
 
 ```sh
 sshpass -p '' ssh -p 2222 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-  -o PreferredAuthentications=password -o PubkeyAuthentication=no root@127.0.0.1 'uname -a; lua -v; busybox wget -qO- http://127.0.0.1/'
+  -o PreferredAuthentications=password -o PubkeyAuthentication=no root@127.0.0.1 'uname -a; busybox wget -qO- http://127.0.0.1/'
 curl http://127.0.0.1:8080/        # lighttpd: <h1>It works!</h1>
 ```
